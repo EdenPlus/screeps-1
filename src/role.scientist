@@ -1,0 +1,24 @@
+var labRequests = require("func.labRequests");
+
+var roleScientist = {
+    
+    run: function (creep) {
+        /*
+        Create an array for lab operations
+        */
+        if (!Memory.labRequests) Memory.labRequests = [];
+        
+        /*
+        Get the structures that could have some of our desired resources
+        */
+        var terminals = _.filter(Game.structures, (schematic) => schematic.structureType == STRUCTURE_TERMINAL);
+        var storages = _.filter(Game.structures, (schematic) => schematic.structureType == STRUCTURE_STORAGE);
+        
+        /*
+        The objective of this creep is to act similarly to a transfer, however, it uses the labRequests array to obtain it's current job
+        It should be targeting fill and empty requests from the labRequests queue as that is what it's purpose is
+        */
+    }
+}
+
+module.exports = roleScientist;
