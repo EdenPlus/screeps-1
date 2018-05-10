@@ -11,12 +11,26 @@ var roleScientist = {
         /*
         Get the structures that could have some of our desired resources
         */
-        var terminals = _.filter(Game.structures, (schematic) => schematic.structureType == STRUCTURE_TERMINAL);
-        var storages = _.filter(Game.structures, (schematic) => schematic.structureType == STRUCTURE_STORAGE);
+        var stores = _.filter(Game.structures, (schematic) => schematic.structureType == STRUCTURE_STORAGE || schematic.structureType == STRUCTURE_TERMINAL);
         
         /*
-        The objective of this creep is to act similarly to a transfer, however, it uses the labRequests array to obtain it's current job
-        It should be targeting fill and empty requests from the labRequests queue as that is what it's purpose is
+        ** Objective **
+        Act similarly to a transfer, however it specs for resources, not energy
+        
+        ** Target Request Types **
+        fill
+        empty
+        
+        ** Request Treatment **
+        fill:
+        The creep should locate the resource specified by the job and transfer it to the lab requesting the resource.
+        If the distance would exceed the lifespan of the scientist, the scientist should be making pitstops in outposts along the way.
+        When the creep deposits an amount of resource into the lab, it should reduce the 'amount' contained in the request by the amount delivered
+        
+        empty:
+        The creep should locate the lab making this request and then proceed to extract the resource from it.
+        The creep should then reduce the 'amount' contained in the request by the amount extracted.
+        The creep should then deliver the resource to the nearest available store (Usually going to be a storage or terminal)
         */
     }
 }
