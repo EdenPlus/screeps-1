@@ -1,0 +1,286 @@
+var maintainLabs = {
+    
+    run: function() {
+        /*
+        Make sure the array for all the lab requests exists
+        */
+        if (!Memory.labRequests) Memory.labRequests = [];
+        
+        /*
+        Build an id for a request based on passed information
+        */
+        function buildRID(labID, rType, resource) {
+            return labID + "_" + rType + "_" + resource;
+        }
+        
+        /*
+        Create a requests to have a lab filled with a resource of the given amount
+        */
+        function requestFill(labID, resource, amount) {
+            var rid = buildRID(labID, "fill", resource);
+            Memory.labRequests.push({rType: "fill", rid: rid, lid: labID, resource: resource, amount: amount});
+            return rid;
+        }
+        
+        /*
+        Make a request for the designated lamb to have it's resources removed from it
+        */
+        function requestEmpty(labID, resource, amount) {
+            var rid = buildRID(labID, "empty", resource);
+            Memory.labRequests.push({rType: "empty", rid: rid, lid: labID, resource: resource, amount: amount});
+            return rid;
+        }
+        
+        /*
+        Create a request to have a given lab boost a given creep
+        */
+        function requestBoost(labID, creepID, resource, amount) {
+            var rid = buildRID(labID, "boost", resource);
+            Memory.labRequests.push({rType: "boost", rid: rid, lid: labID, cid: creepID, resource: resource, amount: amount});
+            return rid;
+        }
+        
+        /*
+        Create a resource production request
+        */
+        function requestProduce(labID, sLab1, sLab2, resource, amount) {
+            var rid = buildRID(labID, "produce", resource);
+            Memory.labRequests.push({rType: "produce", rid: rid, lid: labID, sLab1: sLab1, sLab2: sLab2, resource: resource, amount: amount});
+            return rid;
+        }
+        
+        /*
+        Get the resources that make up the given resource
+        */
+        function componentResources(resource) {
+            var output = [];
+            
+            if (resource.includes("X")) {
+                output.push(resource.substr(0,1));
+                output.push(resource.substr(1));
+            }
+            else if (resource.includes("H2O")) {
+                output.push(resource.substr(0,1) + "H");
+                output.push("HO");
+            }
+            else if (resource.includes("HO2")) {
+                output.push(resource.substr(0,1) + "O");
+                output.push("HO");
+            }
+            else if (resource.length == 2) {
+                output.push(resource.charAt(0));
+                output.push(resource.charAt(1));
+            }
+            else if (resource === "G") {
+                output.push("ZK");
+                output.push("UL");
+            }
+            
+            return output;
+        }
+        
+        /*
+        Check for the given resource in all designated stores
+        */
+        function checkAvailable(resource) {
+            var stores = _.filter(Game.structures, (schematic) => schematic.structureType == STRUCTURE_STORAGE || schematic.structureType == STRUCTURE_TERMINAL);
+            var output = 0;
+            
+            for (var a in stores) {
+                if (resource in stores[a]) {
+                    output += stores[a].store[resource];
+                }
+            }
+            
+            return output;
+        }
+        
+        /*
+        Create a child request for both a fill and produce where necessary
+        */
+        function childResource(labID, resource, amount) {
+            var availableResources = checkAvailable(resource);
+            var fAmount = Math.min(amount, availableResources);
+            var pAmount = amount - fAmount;
+            var sLab1;
+            var sLab2;
+            
+            var tLab = Game.getObjectById(labID);
+            var rLabs = tLab.pos.findInRange(FIND_STRUCTURES, 2, {
+                filter: {structureType: STRUCTURE_LAB}
+            });
+            var bLabs = [];
+            for (var a in Memory.labRequests) {
+                var req = Memory.labRequests[a];
+                if (req.rType == "fill") {
+                    bLabs.push(req.lid);
+                }
+                else if (req.rType == "empty") {
+                    bLabs.push(req.lid);
+                }
+                else if (req.rType == "boost") {
+                    bLabs.push(req.lid);
+                }
+                else if (req.rType == "produce") {
+                    bLabs.push(req.lid);
+                    bLabs.push(req.sLab1);
+                    bLabs.push(req.sLab2);
+                }
+            }
+            var sLabs = _.filter(rLabs, (schematic) => !bLabs.includes(schematic.id));
+            var sLab1 = tLab.pos.findClosestByRange(sLabs);
+            sLabs = sLabs.splice(sLabs.indexOf(sLab1), 1);
+            var sLab2 = tLab.pos.findClosestByRange(sLabs);
+            
+            var orids = [];
+            var frid = requestFill(labID, resource, fAmount);
+            orids.push(frid);
+            var prid = requestProduce(labID, sLab1, sLab2, resource, pAmount);
+            orids.push(prid);
+            return orids;
+        }
+        
+        /*
+        Attempt to execute the given request
+        */
+        function doProduce(request) {
+            var rid = request.rid;
+            var tLab = Game.getObjectById(request.lid);
+            var tResource = request.resource;
+            var componentResources = componentResources(tResource);
+            var tAmount = request.amount;
+            var sLab1 = Game.getObjectById(request.sLab1);
+            var sLab2 = Game.getObjectById(request.sLab2);
+            var pending = request.pending;
+            
+            if (!pending.length) {
+                var reactionResult = tLab.runReaction(sLab1, sLab2);
+                if (reactionResult == OK) {
+                    tAmount -= 1;
+                    if (tAmount === 0) {
+                        Memory.labRequests.splice(Memory.labRequests.indexOf(request), 1);
+                    }
+                }
+                else if (reactionResult == ERR_INVALID_ARGS) {
+                    if (sLab1.mineralType !== componentResources[0] && sLab1.mineralType !== componentResources[1]) {
+                        var subRequest = requestEmpty(sLab1.id, sLab1.mineralType, sLab1.mineralAmount);
+                        pending.push(subRequest);
+                    }
+                    if (sLab2.mineralType !== componentResources[0] && sLab2.mineralType !== componentResources[1]) {
+                        var subRequest = requestEmpty(sLab2.id, sLab2.mineralType, sLab2.mineralAmount);
+                        pending.push(subRequest);
+                    }
+                }
+                else if (reactionResult == ERR_NOT_ENOUGH_RESOURCES) {
+                    var sLab1Res;
+                    var sLab2Res;
+                    if (sLab1.mineralAmount == 0 && sLab2.mineralAmount == 0) {
+                        sLab1Res = componentResources[0];
+                        sLab2Res = componentResources[1];
+                        
+                        var sl1rids = childResources(sLab1.id, sLab1Res, tAmount);
+                        for (var a in sl1rids) {
+                            pending.push(sl1rids[a]);
+                        }
+                        
+                        var sl2rids = childResources(sLab2.id, sLab2Res, tAmount);
+                        for (var a in sl2rids) {
+                            pending.push(sl2rids[a]);
+                        }
+                    }
+                    else if (sLab1.mineralAmount == 0) {
+                        if (sLab2.mineralType == componentResources[0]) {
+                            sLab1Res = componentResources[1];
+                            sLab2Res = componentResources[0];
+                            
+                            var sl1rids = childResources(sLab1.id, sLab1Res, tAmount);
+                            for (var a in sl1rids) {
+                                pending.push(sl1rids[a]);
+                            }
+                        }
+                        else if (sLab2.mineralType == componentResource[1]) {
+                            sLab1Res = componentResources[0];
+                            sLab2Res = componentResources[1];
+                            
+                            var sl1rids = childResources(sLab1.id, sLab1Res, tAmount);
+                            for (var a in sl1rids) {
+                                pending.push(sl1rids[a]);
+                            }
+                        }
+                    }
+                    else if (sLab2.mineralAmount == 0) {
+                        if (sLab1.mineralType == componentResources[0]) {
+                            sLab1Res = componentResources[0];
+                            sLab2Res = componentResources[1];
+                            
+                            var sl2rids = childResources(sLab2.id, sLab2Res, tAmount);
+                            for (var a in sl2rids) {
+                                pending.push(sl2rids[a]);
+                            }
+                        }
+                        else if (sLab1.mineralType == componentResource[1]) {
+                            sLab1Res = componentResources[1];
+                            sLab2Res = componentResources[0];
+                            
+                            var sl2rids = childResources(sLab2.id, sLab2Res, tAmount);
+                            for (var a in sl2rids) {
+                                pending.push(sl2rids[a]);
+                            }
+                        }
+                    }
+                }
+                else if (reactionResult == ERR_FULL) {
+                    var emptyRequest = _.filter(Memory.labRequests, (schematic) => schematic.lid == tLab.id && schematic.rType == "empty");
+                    if (!emptyRequest.length) {
+                        var rid = requestEmpty(tLab.id, tLab.mineralType, tLab.mineralAmount);
+                        pending.push(rid);
+                    }
+                }
+                else {
+                    console.log("Unexpected error encountered.");
+                }
+            }
+            else {
+                for (var a in pending) {
+                    var pendingRequests = _.filter(Memory.labRequests, (schematic) => schematic.rid = pending[a]);
+                    if (pendingRequest.length === 0) {
+                        pending = pending.splice(a, 1);
+                    }
+                    else {
+                        for (var b in pendingRequests) {
+                            if (pendingRequests[b].amount === 0) {
+                                Memory.labRequests = Memory.labRequests.splice(Memory.labRequests.indexOf(pendingRequests[b]), 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        /*
+        Attempt to execute the given boost request
+        */
+        function doBoost(request) {
+            
+        }
+        
+        /*
+        Main loop to execute the labRequest stuff
+        */
+        for (var a in Memory.labRequests) {
+            var rType = Memory.labRequests[a].rType;
+            switch (rType) {
+                case "produce":
+                    doProduce(Memory.labRequests[a]);
+                    break;
+                case "boost":
+                    doBoost(Memory.labRequests[a]);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+}
+
+module.exports = maintainLabs;
