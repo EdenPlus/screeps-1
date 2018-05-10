@@ -1,4 +1,26 @@
 /*
+The purpose of this module is to make requests to labs.
+These requests focus on production and boosts.
+
+The reason for this module is because, the labs will not make any initial requests, nor should they.
+The labs will never have a reason to make any resource. Thus, another part of the code will be used to tell labs to produce minerals.
+
+While it is true that the labs won't ever make an initial production request, the labs will make sub-requests in order to complete a request.
+
+These sub-requests are as follows:
+** Fill request **
+    Not enough of a component resource in the lab, so more must be inserted.
+    This is the primary means of getting resources into a lab.
+
+** Empty Request **
+    One of the labs being used has no space for a production request execution.
+
+** Production Request **
+    Not enough of a non-base component resource is available for use, thus needing a production sub-request.
+    This acts as a secondary action should there not be enough of a given resource to be provided by a fill request.
+*/
+
+/*
 Build an id for a request based on passed information
 */
 function buildRID(labID, rType, resource) {
