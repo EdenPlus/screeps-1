@@ -1,0 +1,49 @@
+/*
+Build an id for a request based on passed information
+*/
+function buildRID(labID, rType, resource) {
+    return labID + "_" + rType + "_" + resource;
+}
+
+/*
+Create a requests to have a lab filled with a resource of the given amount
+*/
+function requestFill(labID, resource, amount) {
+    var rid = buildRID(labID, "fill", resource);
+    Memory.labRequests.push({rType: "fill", rid: rid, lid: labID, resource: resource, amount: amount});
+    return rid;
+}
+
+/*
+Make a request for the designated lamb to have it's resources removed from it
+*/
+function requestEmpty(labID, resource, amount) {
+    var rid = buildRID(labID, "empty", resource);
+    Memory.labRequests.push({rType: "empty", rid: rid, lid: labID, resource: resource, amount: amount});
+    return rid;
+}
+
+/*
+Create a request to have a given lab boost a given creep
+*/
+function requestBoost(labID, creepID, resource, amount) {
+    var rid = buildRID(labID, "boost", resource);
+    Memory.labRequests.push({rType: "boost", rid: rid, lid: labID, cid: creepID, resource: resource, amount: amount});
+    return rid;
+}
+
+/*
+Create a resource production request
+*/
+function requestProduce(labID, sLab1, sLab2, resource, amount) {
+    var rid = buildRID(labID, "produce", resource);
+    Memory.labRequests.push({rType: "produce", rid: rid, lid: labID, sLab1: sLab1, sLab2: sLab2, resource: resource, amount: amount});
+    return rid;
+}
+
+module.exports = {
+    requestFill: requestFill,
+    requestEmpty: requestEmpty,
+    requestBoost: requestBoost,
+    requestProduce: requestProduce
+};
