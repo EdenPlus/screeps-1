@@ -59,7 +59,7 @@ Create a resource production request
 */
 function requestProduce(labID, sLab1, sLab2, resource, amount) {
     var rid = buildRID(labID, "produce", resource);
-    Memory.labRequests.push({rType: "produce", rid: rid, lid: labID, sLab1: sLab1, sLab2: sLab2, resource: resource, amount: amount});
+    Memory.labRequests.push({rType: "produce", rid: rid, lid: labID, sLab1: sLab1, sLab2: sLab2, resource: resource, amount: amount, pending: []});
     return rid;
 }
 
