@@ -129,10 +129,74 @@ function setAttackTarget(startingRoom, targetRoom) {
     Game.rooms[startingRoom].memory.target = targetRoom;
 }
 
+/*
+Description:
+Delete a Lab request and all of it's sub-requests
+
+Parameters:
+rid (Request ID)
+
+Usage:
+require('commands').cancelLabRequest(rid);
+
+Example:
+require('commands').cancelLabRequest("1n234oin1l2j34jbo3y213i4un_fill_X");
+*/
+function cancelLabRequest(rid) {
+    var rids = subRequests(rid);
+    console.log(JSON.stringify(rids));
+    for (var a in rids) {
+        cleanOutRequests(rids[a]);
+    }
+}
+
+/*
+This is a recursive function used by the cancelLabRequest command
+*/
+function subRequests(prid) {
+    var request = _.filter(Memory.labRequests, (schematic) => schematic.rid == prid);
+    var output = [];
+    output.push(prid);
+    if (request[0].pending) {
+        for (var a in request[0].pending) {
+            var sub = subRequests(request[0].pending[a]);
+            for (var b in sub) {
+                output.push(sub[b]);
+            }
+        }
+    }
+    return output;
+}
+
+/*
+This is a function used by the cancelLabRequest command
+*/
+function cleanOutRequests(prid) {
+    Memory.labRequests = _.filter(Memory.labRequests, (schematic) => schematic.rid != prid);
+}
+
+/*
+This function exists as a means of generating sample data for Memory.labRequests
+*/
+function BSRs() {
+    Memory.labRequests = [
+        {rType: "produce", rid: "lid1_produce_G", lid: "lid1", sLab1: "lid2", sLab2: "lid3", resource: "G", amount: 5, pending: ["lid2_produce_ZK", "lid3_produce_UL"]},
+        {rType: "produce", rid: "lid2_produce_ZK", lid: "lid2", sLab1: "lid4", sLab2: "lid5", resource: "ZK", amount: 5, pending: ["lid4_fill_Z", "lid5_fill_K"]},
+        {rType: "produce", rid: "lid3_produce_UL", lid: "lid3", sLab1: "lid6", sLab2: "lid7", resource: "UL", amount: 5, pending: ["lid6_fill_U", "lid7_fill_L"]},
+        {rType: "fill", rid: "lid4_fill_Z", lid: "lid4", resource: "Z", amount: 5},
+        {rType: "fill", rid: "lid5_fill_K", lid: "lid5", resource: "K", amount: 5},
+        {rType: "fill", rid: "lid6_fill_U", lid: "lid6", resource: "U", amount: 5},
+        {rType: "fill", rid: "lid7_fill_L", lid: "lid7", resource: "L", amount: 5}
+    ];
+}
+
 // Whenever a command is added to this script, it needs to be referenced in this export, following the already listed function's format
 module.exports = {
     visualizeBoundary: visualizeBoundary,
     resetPlan: resetPlan,
     toggleTSR: toggleTSR,
-    setAttackTarget: setAttackTarget
+    setAttackTarget: setAttackTarget,
+    cancelLabRequest: cancelLabRequest,
+    subRequests: subRequests,
+    BSRs: BSRs
 };
