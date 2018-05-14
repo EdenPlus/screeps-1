@@ -15,11 +15,8 @@ var maintainNexus = {
         if (!curRoom.memory.plan.SW           && curRoom.memory.plan.SW !== false           && curRoom.memory.plan !== false) curRoom.memory.plan.SW = true;
         if (!curRoom.memory.plan.NE           && curRoom.memory.plan.NE !== false           && curRoom.memory.plan !== false) curRoom.memory.plan.NE = true;
         if (!curRoom.memory.plan.SE           && curRoom.memory.plan.SE !== false           && curRoom.memory.plan !== false) curRoom.memory.plan.SE = true;
-        if (!curRoom.memory.plan.exts         && curRoom.memory.plan.exts !== false         && curRoom.memory.plan !== false) curRoom.memory.plan.exts = false;
-        if (!curRoom.memory.plan.core         && curRoom.memory.plan.core !== false         && curRoom.memory.plan !== false) curRoom.memory.plan.core = false;
+        if (!curRoom.memory.plan.planning     && curRoom.memory.plan.planning !== false     && curRoom.memory.plan !== false) curRoom.memory.plan.planning = 0;
         if (!curRoom.memory.plan.labs         && !(curRoom.memory.plan.labs >= 0)           && curRoom.memory.plan !== false) curRoom.memory.plan.labs = 0;
-        if (!curRoom.memory.plan.towers       && curRoom.memory.plan.towers !== false       && curRoom.memory.plan !== false) curRoom.memory.plan.towers = false;
-        if (!curRoom.memory.plan.barricades   && curRoom.memory.plan.barricades !== false   && curRoom.memory.plan !== false) curRoom.memory.plan.barricades = false;
         if (!curRoom.memory.plan.sourceRoads  && curRoom.memory.plan.sourceRoads !== false  && curRoom.memory.plan !== false) curRoom.memory.plan.sourceRoads = {};
         
         // Find the first constructed spawn in the room
@@ -29,24 +26,6 @@ var maintainNexus = {
         
         // Function to separate this from the main wrapper
         function doExtensions() {
-            // Find extensions in planQueue
-            var trial = _.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.type == 4);
-            /*
-            These were established before the planQueue was made permanent
-            They have been disabled throughout the code due to possibly being reductive
-            
-            // Find extensions in buildQueue
-            var trial2 = _.filter(curRoom.memory.buildQueue, (schematic) => schematic.type == STRUCTURE_EXTENSION);
-            // Find extensions in room
-            var trial3 = _.filter(curRoom.find(FIND_STRUCTURES), (schematic) => schematic.structureType == STRUCTURE_EXTENSION);
-            // Find extension construction sites in room
-            var trial4 = _.filter(curRoom.find(FIND_CONSTRUCTION_SITES), (schematic) => schematic.structureType == STRUCTURE_EXTENSION);
-            */
-            // Get the max number of extensions
-            var maxExtensions = CONTROLLER_STRUCTURES[STRUCTURE_EXTENSION]["8"];
-            // Make variable for extensions queued in tick
-            var queuedInTick = 0;
-            
             // Plot extensions to the Northwest
             if (curRoom.memory.plan.NW) {
                 // Variable to determine where the road capstone should go
@@ -258,7 +237,7 @@ var maintainNexus = {
                 curRoom.memory.plan.offset++;
             }
             else {
-                curRoom.memory.plan.exts = true;
+                curRoom.memory.plan.planning++;
             }
         }
         
@@ -424,7 +403,8 @@ var maintainNexus = {
             curRoom.memory.plan.planQueue.push({x: (storageLoc.x), y: (storageLoc.y + 3), type: 1});
             curRoom.memory.plan.planQueue.push({x: (storageLoc.x), y: (storageLoc.y + 4), type: 1});
             
-            curRoom.memory.plan.core = true;
+            // Set this wrapper to true
+            curRoom.memory.plan.planning++;
         }
         
         // Function to separate this from the main wrapper
@@ -478,7 +458,7 @@ var maintainNexus = {
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - 5), y: (storageLoc.y - 0), type: 1});
                         //curRoom.memory.plan.planQueue.push({x: (storageLoc.x - 4), y: (storageLoc.y - 0), type: 1});
                         
-                        curRoom.memory.plan.labs = true;
+                        curRoom.memory.plan.planning++;
                     }
                     else {
                         curRoom.memory.plan.labs++;
@@ -532,7 +512,7 @@ var maintainNexus = {
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - 5), y: (storageLoc.y - 0), type: 1});
                         //curRoom.memory.plan.planQueue.push({x: (storageLoc.x - 4), y: (storageLoc.y - 0), type: 1});
                         
-                        curRoom.memory.plan.labs = true;
+                        curRoom.memory.plan.planning++;
                     }
                     else {
                         curRoom.memory.plan.labs++;
@@ -586,7 +566,7 @@ var maintainNexus = {
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - 0), y: (storageLoc.y - 5), type: 1});
                         //curRoom.memory.plan.planQueue.push({x: (storageLoc.x - 0), y: (storageLoc.y - 4), type: 1});
                         
-                        curRoom.memory.plan.labs = true;
+                        curRoom.memory.plan.planning++;
                     }
                     else {
                         curRoom.memory.plan.labs++;
@@ -640,7 +620,7 @@ var maintainNexus = {
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - 0), y: (storageLoc.y - 5), type: 1});
                         //curRoom.memory.plan.planQueue.push({x: (storageLoc.x - 0), y: (storageLoc.y - 4), type: 1});
                         
-                        curRoom.memory.plan.labs = true;
+                        curRoom.memory.plan.planning++;
                     }
                     else {
                         curRoom.memory.plan.labs++;
@@ -694,7 +674,7 @@ var maintainNexus = {
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + 5), y: (storageLoc.y - 0), type: 1});
                         //curRoom.memory.plan.planQueue.push({x: (storageLoc.x + 4), y: (storageLoc.y - 0), type: 1});
                         
-                        curRoom.memory.plan.labs = true;
+                        curRoom.memory.plan.planning++;
                     }
                     else {
                         curRoom.memory.plan.labs++;
@@ -748,7 +728,7 @@ var maintainNexus = {
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + 5), y: (storageLoc.y - 0), type: 1});
                         //curRoom.memory.plan.planQueue.push({x: (storageLoc.x + 4), y: (storageLoc.y - 0), type: 1});
                         
-                        curRoom.memory.plan.labs = true;
+                        curRoom.memory.plan.planning++;
                     }
                     else {
                         curRoom.memory.plan.labs++;
@@ -802,7 +782,7 @@ var maintainNexus = {
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - 0), y: (storageLoc.y + 5), type: 1});
                         //curRoom.memory.plan.planQueue.push({x: (storageLoc.x - 0), y: (storageLoc.y + 4), type: 1});
                         
-                        curRoom.memory.plan.labs = true;
+                        curRoom.memory.plan.planning++;
                     }
                     else {
                         curRoom.memory.plan.labs++;
@@ -856,7 +836,7 @@ var maintainNexus = {
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - 0), y: (storageLoc.y + 5), type: 1});
                         //curRoom.memory.plan.planQueue.push({x: (storageLoc.x - 0), y: (storageLoc.y + 4), type: 1});
                         
-                        curRoom.memory.plan.labs = true;
+                        curRoom.memory.plan.planning++;
                     }
                     else {
                         curRoom.memory.plan.labs++;
@@ -1133,7 +1113,7 @@ var maintainNexus = {
                         numTowersQueued++;
                         // Break loop on size cap
                         if (towersPlanned + numTowersQueued >= towerCap) {
-                            curRoom.memory.plan.towers = true;
+                            curRoom.memory.plan.planning++;
                             break doCoords;
                         }
                     }
@@ -1281,11 +1261,14 @@ var maintainNexus = {
                     }
                 }
             }
-            curRoom.memory.plan.barricades = true;
+            
+            curRoom.memory.plan.planning++;
         }
         
         // Function to separate this from the main wrapper
         function doSourceRoads() {
+            // Find built extensions in room
+            var builtExtensions = _.filter(curRoom.find(FIND_STRUCTURES), (schematic) => schematic.structureType == STRUCTURE_EXTENSION);
             var sourceRoadQueue = [];
             var towerTrial = _.filter(curRoom.find(FIND_STRUCTURES), (structure) => structure.structureType == STRUCTURE_TOWER);
             if (!curRoom.memory.plan.sourceRoads.safeSources) curRoom.memory.plan.sourceRoads.safeSources = [];
@@ -1312,7 +1295,7 @@ var maintainNexus = {
                 }
                 curRoom.memory.plan.sourceRoads.sourceCheck = true;
             }
-            if (trial3.length >= 5 && curRoom.memory.plan.sourceRoads.safeSources.length && !curRoom.memory.plan.sourceRoads.safeSourcesPlan) {
+            if (builtExtensions.length >= 5 && curRoom.memory.plan.sourceRoads.safeSources.length && !curRoom.memory.plan.sourceRoads.safeSourcesPlan) {
                 for (var a in curRoom.memory.plan.sourceRoads.safeSources) {
                     var path = curRoom.findPath(new RoomPosition(storageLoc.x, storageLoc.y, curRoom.name), curRoom.memory.plan.sourceRoads.safeSources[a].pos, {ignoreCreeps: true, costCallback: function(roomName, costMatrix) {
                         var trial = _.filter(curRoom.memory.plan.planQueue, (schematic) => (schematic.type >= 3));
@@ -1395,35 +1378,57 @@ var maintainNexus = {
                 curRoom.memory.plan.planQueue.splice(a, 0, sourceRoadQueue[a]);
             }
             if ((!curRoom.memory.plan.sourceRoads.safeSources.length || curRoom.memory.plan.sourceRoads.safeSourcesPlan) && (!curRoom.memory.plan.sourceRoads.riskySources.length || curRoom.memory.plan.sourceRoads.riskySourcesPlan)) {
-                curRoom.memory.plan.sourceRoads = true;
+                curRoom.memory.plan.planning++;
             }
         }
         
         // Main wrapper for the planQueue writing functions
         if (curRoom.memory.plan && curRoom.memory.plan !== false) {
-            // Plan the extensions
-            if (curRoom.memory.plan.exts != true) {
-                doExtensions();
-            }
-            // Plan the core of the nexus
-            else if (curRoom.memory.plan.core != true) {
-                doCore();
-            }
-            // Plan the labs
-            else if (curRoom.memory.plan.labs != true) {
-                doLabs();
-            }
-            // Plan the towers
-            else if (curRoom.memory.plan.towers != true) {
-                doTowers();
-            }
-            // Plan the barricades
-            else if (curRoom.memory.plan.barricades != true) {
-                doBarricades();
-            }
-            // Plan the sourceRoads
-            else if (curRoom.memory.plan.sourceRoads != true) {
-                doSourceRoads();
+            // Find extensions in planQueue
+            var trial = _.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.type == 4);
+            /*
+            These were established before the planQueue was made permanent
+            They have been disabled throughout the code due to possibly being reductive
+            
+            // Find extensions in buildQueue
+            var trial2 = _.filter(curRoom.memory.buildQueue, (schematic) => schematic.type == STRUCTURE_EXTENSION);
+            // Find extensions in room
+            var trial3 = _.filter(curRoom.find(FIND_STRUCTURES), (schematic) => schematic.structureType == STRUCTURE_EXTENSION);
+            // Find extension construction sites in room
+            var trial4 = _.filter(curRoom.find(FIND_CONSTRUCTION_SITES), (schematic) => schematic.structureType == STRUCTURE_EXTENSION);
+            */
+            // Get the max number of extensions
+            var maxExtensions = CONTROLLER_STRUCTURES[STRUCTURE_EXTENSION]["8"];
+            // Make variable for extensions queued in tick
+            var queuedInTick = 0;
+            
+            switch (curRoom.memory.plan.planning) {
+                case 0:
+                    // Plan Extensions
+                    doExtensions();
+                    break;
+                case 1:
+                    // Plan Core
+                    doCore();
+                    break;
+                case 2:
+                    // Plan Labs
+                    doLabs();
+                    break;
+                case 3:
+                    // Plan Towers
+                    doTowers();
+                    break;
+                case 4:
+                    // Plan Barricades
+                    doBarricades();
+                    break;
+                case 5:
+                    // Plan SourceRoads
+                    doSourceRoads();
+                    break;
+                default:
+                    break;
             }
         }
     }
