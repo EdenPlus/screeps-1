@@ -1,8 +1,13 @@
 var maintainNexus = {
     
     run: function(curRoom) {
-        var firstSpawn = curRoom.find(FIND_MY_SPAWNS)[0];
-        var storageLoc = {x: (firstSpawn.pos.x - 1), y: firstSpawn.pos.y};
+        // This is the key for the planQueue types
+        //    Road: 1        | D  Rampart: 2      | D  Wall: 3         | D  Extension: 4
+        // D  Tower: 5       | D  Spawn: 6        |    Power Spawn: 7  | D  Storage: 8
+        //    Link: 9        | D  Lab: 10         | D  Terminal: 11    |    Observer: 12 
+        //    Extractor: 13  | D  Container: 14
+        
+        // Establish a number of variables we will need for the planQueue and make sure we aren't overwriting anything in the midst of being used
         if (!curRoom.memory.plan              && curRoom.memory.plan !== false                                              ) curRoom.memory.plan = {};
         if (!curRoom.memory.plan.planQueue    && curRoom.memory.plan !== false                                              ) curRoom.memory.plan.planQueue = [];
         if (!curRoom.memory.plan.offset       && curRoom.memory.plan !== false                                              ) curRoom.memory.plan.offset = 1;
@@ -16,42 +21,74 @@ var maintainNexus = {
         if (!curRoom.memory.plan.NE           && curRoom.memory.plan.NE !== false           && curRoom.memory.plan !== false) curRoom.memory.plan.NE = true;
         if (!curRoom.memory.plan.SE           && curRoom.memory.plan.SE !== false           && curRoom.memory.plan !== false) curRoom.memory.plan.SE = true;
         
+        // Find the first constructed spawn in the room
+        var firstSpawn = curRoom.find(FIND_MY_SPAWNS)[0];
+        // Get the location the storage would go based on the first spawn
+        var storageLoc = {x: (firstSpawn.pos.x - 1), y: firstSpawn.pos.y};
+        
+        // Write a segment of extensions into the plan queue based on the coordinates passed into the function
         function mapExtensions(roadPos, xA, xB, xC, yA, yB, yC) {
+            // These variables are used to check if we should continue with the respective axis
             var xShift = true;
             var yShift = true;
+            
+            // If no walls encountered yet
             if (xShift) {
-                if(trial.length + trial2.length + trial3.length + trial4.length + queuedInTick < maxExtensions) {
+                // If not at capacity for planned extensions
+                if(trial.length/* + trial2.length + trial3.length + trial4.length*/ + queuedInTick < maxExtensions) {
+                    // If not wall
                     if (Game.map.getTerrainAt(xA, roadPos.y, curRoom.name) !== 'wall') {
+                        // Make sure it's not a dupe in the planQueue
                         if (!(_.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.x == xA && schematic.y == roadPos.y && schematic.type == 4).length)) {
+                            // Add location and building to planQueue
                             curRoom.memory.plan.planQueue.push({x: xA, y: roadPos.y, type: 4});
+                            // Iterate queuedInTick
                             queuedInTick++;
                         }
                     }
+                    // If wall
                     else {
+                        // Set this axis to false
                         xShift = false;
                     }
                 }
             }
+            // If no walls encountered yet
             if (yShift) {
-                if(trial.length + trial2.length + trial3.length + trial4.length + queuedInTick < maxExtensions) {
+                // If not at capacity for planned extensions
+                if(trial.length/* + trial2.length + trial3.length + trial4.length*/ + queuedInTick < maxExtensions) {
+                    // If not wall
                     if (Game.map.getTerrainAt(roadPos.x, yA, curRoom.name) !== 'wall') {
+                        // Make sure it's not a dupe in the planQueue
                         if (!(_.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.x == roadPos.x && schematic.y == yA && schematic.type == 4).length)) {
+                            // Add location and building to planQueue
                             curRoom.memory.plan.planQueue.push({x: roadPos.x, y: yA, type: 4});
+                            // Iterate queuedInTick
                             queuedInTick++;
                         }
                     }
+                    // If wall
                     else {
+                        // Set axis to false
                         yShift = false;
                     }
                 }
             }
+            // If walls encountered on both axis
             if (!xShift && !yShift) {
+                // Break segment placer
                 return;
             }
+            
+            // If no walls encountered yet
             if (xShift) {
-                if(trial.length + trial2.length + trial3.length + trial4.length + queuedInTick < maxExtensions) {
+                // If not at capacity for planned extensions
+                if(trial.length/* + trial2.length + trial3.length + trial4.length*/ + queuedInTick < maxExtensions) {
+                    // If not wall
                     if (Game.map.getTerrainAt(xB, roadPos.y, curRoom.name) !== 'wall') {
+                        // Make sure it's not a dupe in the planQueue
                         if (!(_.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.x == xB && schematic.y == roadPos.y && schematic.type == 4).length)) {
+                            // Add location and building to planQueue
                             curRoom.memory.plan.planQueue.push({x: xB, y: roadPos.y, type: 4});
                             queuedInTick++;
                         }
@@ -61,10 +98,15 @@ var maintainNexus = {
                     }
                 }
             }
+            // If no walls encountered yet
             if (yShift) {
-                if(trial.length + trial2.length + trial3.length + trial4.length + queuedInTick < maxExtensions) {
+                // If not at capacity for planned extensions
+                if(trial.length/* + trial2.length + trial3.length + trial4.length*/ + queuedInTick < maxExtensions) {
+                    // If not wall
                     if (Game.map.getTerrainAt(roadPos.x, yB, curRoom.name) !== 'wall') {
+                        // Make sure it's not a dupe in the planQueue
                         if (!(_.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.x == roadPos.x && schematic.y == yB && schematic.type == 4).length)) {
+                            // Add location and building to planQueue
                             curRoom.memory.plan.planQueue.push({x: roadPos.x, y: yB, type: 4});
                             queuedInTick++;
                         }
@@ -74,12 +116,19 @@ var maintainNexus = {
                     }
                 }
             }
+            // If walls encountered on both axis
             if (!xShift && !yShift) {
+                // Break segment placer
                 return;
             }
+            
+            // If no walls encountered yet
             if (xShift) {
+                    // If not wall
                 if (Game.map.getTerrainAt(xC, roadPos.y, curRoom.name) !== 'wall') {
+                    // If not wall
                     if (!(_.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.x == xC && schematic.y == roadPos.y && schematic.type == 1).length)) {
+                        // Add location and building to planQueue
                         curRoom.memory.plan.planQueue.push({x: xC, y: roadPos.y, type: 1});
                     }
                 }
@@ -87,9 +136,12 @@ var maintainNexus = {
                     xShift = false;
                 }
             }
+            // If no walls encountered yet
             if (yShift) {
+                    // If not wall
                 if (Game.map.getTerrainAt(roadPos.x, yC, curRoom.name) !== 'wall') {
                     if (!(_.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.x == roadPos.x && schematic.y == yC && schematic.type == 1).length)) {
+                        // Add location and building to planQueue
                         curRoom.memory.plan.planQueue.push({x: roadPos.x, y: yC, type: 1});
                     }
                 }
@@ -97,153 +149,244 @@ var maintainNexus = {
                     yShift = false;
                 }
             }
+            // If walls encountered on both axis
             if (!xShift && !yShift) {
+                // Break segment place
                 return;
             }
         }
         
+        // Main wrapper on the plan queue writing function
         if (curRoom.memory.plan && curRoom.memory.plan !== false) {
+            // Find extensions in planQueue
             var trial = _.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.type == 4);
+            /*
+            These were established before the planQueue was made permanent
+            They have been disabled throughout the code due to possibly being reductive
+            
+            // Find extensions in buildQueue
             var trial2 = _.filter(curRoom.memory.buildQueue, (schematic) => schematic.type == STRUCTURE_EXTENSION);
+            // Find extensions in room
             var trial3 = _.filter(curRoom.find(FIND_STRUCTURES), (schematic) => schematic.structureType == STRUCTURE_EXTENSION);
+            // Find extension construction sites in room
             var trial4 = _.filter(curRoom.find(FIND_CONSTRUCTION_SITES), (schematic) => schematic.structureType == STRUCTURE_EXTENSION);
+            */
+            // Get the max number of extensions
             var maxExtensions = CONTROLLER_STRUCTURES[STRUCTURE_EXTENSION]["8"];
+            // Make variable for extensions queued in tick
             var queuedInTick = 0;
             
+            // Plot extensions to the Northwest
             if (curRoom.memory.plan.NW) {
+                // Variable to determine where the road capstone should go
                 var builtInTick = false;
-                if (trial.length + trial2.length + trial3.length + trial4.length + queuedInTick < maxExtensions) {
+                // Check if below maximum count of extensions
+                if (trial.length/* + trial2.length + trial3.length + trial4.length*/ + queuedInTick < maxExtensions) {
+                    // Get the spot for the road of this segment
                     var curPos = {x: (storageLoc.x - curRoom.memory.plan.offset), y: (storageLoc.y - curRoom.memory.plan.offset)};
+                    // Check if spot is not a wall
                     if (Game.map.getTerrainAt(curPos.x, curPos.y, curRoom.name) !== 'wall') {
+                        // Check if not dupe
                         if (!(_.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.x == curPos.x && schematic.y == curPos.y && schematic.type == 1).length)) {
+                            // Set builtInTick to true
                             builtInTick = true;
+                            // Add the road from this segment to the planQueue
                             curRoom.memory.plan.planQueue.push({x: curPos.x, y: curPos.y, type: 1});
+                            // Run segment planning function
                             mapExtensions(curPos, (curPos.x - 1), (curPos.x - 2), (curPos.x - 3), (curPos.y - 1), (curPos.y - 2), (curPos.y - 3));
                         }
                     }
+                    // If wall
                     else {
+                        // Put a capstone of roads at the end of this branch
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset), y: (storageLoc.y - curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset - 1), y: (storageLoc.y - curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset), y: (storageLoc.y - curRoom.memory.plan.offset - 1), type: 1});
+                        // Set this branch to false because it's a deadend
                         curRoom.memory.plan.NW = false;
                     }
                 }
+                // If we have enough extensions in planQueue
                 else {
+                    // Check if we built this tick
                     if (builtInTick) {
+                        // Put a capstone of roads at the end of this branch
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset - 1), y: (storageLoc.y - curRoom.memory.plan.offset - 1), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset - 2), y: (storageLoc.y - curRoom.memory.plan.offset - 1), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset - 1), y: (storageLoc.y - curRoom.memory.plan.offset - 2), type: 1});
                     }
+                    // If haven't built this tick
                     else {
+                        // Put a capstone of roads at the end of this branch
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset), y: (storageLoc.y - curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset - 1), y: (storageLoc.y - curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset), y: (storageLoc.y - curRoom.memory.plan.offset - 1), type: 1});
                     }
+                    // Set this branch to false because it's a deadend
                     curRoom.memory.plan.NW = false;
                 }
             }
+            // Plot extensions to the Southwest
             if (curRoom.memory.plan.SW) {
+                // Variable to determine where the road capstone should go
                 var builtInTick = false;
-                if (trial.length + trial2.length + trial3.length + trial4.length + queuedInTick < maxExtensions) {
+                // Check if below maximum count of extensions
+                if (trial.length/* + trial2.length + trial3.length + trial4.length*/ + queuedInTick < maxExtensions) {
+                    // Get the spot for the road of this segment
                     var curPos = {x: (storageLoc.x - curRoom.memory.plan.offset), y: (storageLoc.y + curRoom.memory.plan.offset)};
+                    // Check if spot is not a wall
                     if (Game.map.getTerrainAt(curPos.x, curPos.y, curRoom.name) !== 'wall') {
+                        // Check if not dupe
                         if (!(_.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.x == curPos.x && schematic.y == curPos.y && schematic.type == 1).length)) {
+                            // Set builtInTick to true
                             builtInTick = true;
+                            // Add the road from this segment to the planQueue
                             curRoom.memory.plan.planQueue.push({x: curPos.x, y: curPos.y, type: 1});
+                            // Run segment planning function
                             mapExtensions(curPos, (curPos.x - 1), (curPos.x - 2), (curPos.x - 3), (curPos.y + 1), (curPos.y + 2), (curPos.y + 3));
                         }
                     }
+                    // If wall
                     else {
+                        // Put a capstone of roads at the end of this branch
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset), y: (storageLoc.y + curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset - 1), y: (storageLoc.y + curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset), y: (storageLoc.y + curRoom.memory.plan.offset + 1), type: 1});
+                        // Set this branch to false because it's a deadend
                         curRoom.memory.plan.SW = false;
                     }
                 }
+                // If we have enough extensions in planQueue
                 else {
+                    // Check if built this tick
                     if (builtInTick) {
+                        // Put a capstone of roads at the end of this branch
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset - 1), y: (storageLoc.y + curRoom.memory.plan.offset + 1), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset - 2), y: (storageLoc.y + curRoom.memory.plan.offset + 1), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset - 1), y: (storageLoc.y + curRoom.memory.plan.offset + 2), type: 1});
                     }
+                    // If haven't built this tick
                     else {
+                        // Put a capstone of roads at the end of this branch
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset), y: (storageLoc.y + curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset - 1), y: (storageLoc.y + curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x - curRoom.memory.plan.offset), y: (storageLoc.y + curRoom.memory.plan.offset + 1), type: 1});
                     }
+                    // Set this branch to false because it's a deadend
                     curRoom.memory.plan.SW = false;
                 }
             }
+            // Plot extensions to the Northeast
             if (curRoom.memory.plan.NE) {
+                // Variable to determine where the road capstone should go
                 var builtInTick = false;
-                if (trial.length + trial2.length + trial3.length + trial4.length + queuedInTick < maxExtensions) {
+                // Check if below maximum count of extensions
+                if (trial.length/* + trial2.length + trial3.length + trial4.length*/ + queuedInTick < maxExtensions) {
+                    // Get the spot for the road of this segment
                     var curPos = {x: (storageLoc.x + curRoom.memory.plan.offset), y: (storageLoc.y - curRoom.memory.plan.offset)};
+                    // Check if spot is not a wall
                     if (Game.map.getTerrainAt(curPos.x, curPos.y, curRoom.name) !== 'wall') {
+                        // Check if not dupe
                         if (!(_.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.x == curPos.x && schematic.y == curPos.y && schematic.type == 1).length)) {
+                            // Set builtInTick to true
                             builtInTick = true;
+                            // Add the road from this segment to the planQueue
                             curRoom.memory.plan.planQueue.push({x: curPos.x, y: curPos.y, type: 1});
+                            // Run segment planning function
                             mapExtensions(curPos, (curPos.x + 1), (curPos.x + 2), (curPos.x + 3), (curPos.y - 1), (curPos.y - 2), (curPos.y - 3));
                         }
                     }
+                    // If wall
                     else {
+                        // Put a capstone of roads at the end of this branch
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset), y: (storageLoc.y - curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset + 1), y: (storageLoc.y - curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset), y: (storageLoc.y - curRoom.memory.plan.offset - 1), type: 1});
+                        // Set this branch to false because it's a deadend
                         curRoom.memory.plan.NE = false;
                     }
                 }
+                // If we have enough extensions in planQueue
                 else {
+                    // Check if built this tick
                     if (builtInTick) {
+                        // Put a capstone of roads at the end of this branch
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset + 1), y: (storageLoc.y - curRoom.memory.plan.offset - 1), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset + 2), y: (storageLoc.y - curRoom.memory.plan.offset - 1), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset + 1), y: (storageLoc.y - curRoom.memory.plan.offset - 2), type: 1});
                     }
+                    // If haven't built this tick
                     else {
+                        // Put a capstone of roads at the end of this branch
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset), y: (storageLoc.y - curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset + 1), y: (storageLoc.y - curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset), y: (storageLoc.y - curRoom.memory.plan.offset - 1), type: 1});
                     }
+                    // Set this branch to false because it's a deadend
                     curRoom.memory.plan.NE = false;
                 }
             }
+            // Plot extensions to the Southeast
             if (curRoom.memory.plan.SE) {
+                // Variable to determine where the road capstone should go
                 var builtInTick = false;
-                if (trial.length + trial2.length + trial3.length + trial4.length + queuedInTick < maxExtensions) {
+                // Check if below maximum count of extensions
+                if (trial.length/* + trial2.length + trial3.length + trial4.length*/ + queuedInTick < maxExtensions) {
+                    // Get the spot for the road of this segment
                     var curPos = {x: (storageLoc.x + curRoom.memory.plan.offset), y: (storageLoc.y + curRoom.memory.plan.offset)};
+                    // Check if spot is not a wall
                     if (Game.map.getTerrainAt(curPos.x, curPos.y, curRoom.name) !== 'wall') {
+                        // Check if not dupe
                         if (!(_.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.x == curPos.x && schematic.y == curPos.y && schematic.type == 1).length)) {
+                            // Set builtInTick to true
                             builtInTick = true;
+                            // Add the road from this segment to the planQueue
                             curRoom.memory.plan.planQueue.push({x: curPos.x, y: curPos.y, type: 1});
+                            // Run segment planning function
                             mapExtensions(curPos, (curPos.x + 1), (curPos.x + 2), (curPos.x + 3), (curPos.y + 1), (curPos.y + 2), (curPos.y + 3));
                         }
                     }
+                    // If wall
                     else {
+                        // Put a capstone of roads at the end of this branch
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset), y: (storageLoc.y + curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset + 1), y: (storageLoc.y + curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset), y: (storageLoc.y + curRoom.memory.plan.offset + 1), type: 1});
+                        // Set this branch to false because it's a deadend
                         curRoom.memory.plan.SE = false;
                     }
                 }
+                // If we have enough extensions in planQueue
                 else {
+                    // Check if built this tick
                     if (builtInTick) {
+                        // Put a capstone of roads at the end of this branch
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset + 1), y: (storageLoc.y + curRoom.memory.plan.offset + 1), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset + 2), y: (storageLoc.y + curRoom.memory.plan.offset + 1), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset + 1), y: (storageLoc.y + curRoom.memory.plan.offset + 2), type: 1});
                     }
+                    // If haven't built this tick
                     else {
+                        // Put a capstone of roads at the end of this branch
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset), y: (storageLoc.y + curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset + 1), y: (storageLoc.y + curRoom.memory.plan.offset), type: 1});
                         curRoom.memory.plan.planQueue.push({x: (storageLoc.x + curRoom.memory.plan.offset), y: (storageLoc.y + curRoom.memory.plan.offset + 1), type: 1});
                     }
+                    // Set this branch to false because it's a deadend
                     curRoom.memory.plan.SE = false;
                 }
             }
-            if (trial.length + trial2.length + trial3.length + trial4.length + queuedInTick < maxExtensions) {
+            // If extension plans are less than cap
+            if (trial.length/* + trial2.length + trial3.length + trial4.length*/ + queuedInTick < maxExtensions) {
+                // Increment offset for next execution
                 curRoom.memory.plan.offset++;
             }
+            // If any branchs are still true (Still not deadends)
             else if (curRoom.memory.plan.NW || curRoom.memory.plan.SW || curRoom.memory.plan.NE || curRoom.memory.plan.SE) {
+                // Increment offset
                 curRoom.memory.plan.offset++;
             }
+            // Plan the core of the nexus
             else if (curRoom.memory.plan.core != true) {
                 // Storage
                 curRoom.memory.plan.planQueue.push({x: (storageLoc.x), y: (storageLoc.y), type: 8});
@@ -277,6 +420,7 @@ var maintainNexus = {
                 
                 curRoom.memory.plan.core = true;
             }
+            // Plan the labs
             else if (curRoom.memory.plan.labs != true) {
                 switch (curRoom.memory.plan.labs) {
                     case 0:
@@ -955,6 +1099,7 @@ var maintainNexus = {
                         break;
                 }
             }
+            // Plan the towers
             else if (curRoom.memory.plan.towers != true) {
                 var towerCap = CONTROLLER_STRUCTURES[STRUCTURE_TOWER]['8'];
                 var towersPlanned = _.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.type == 5).length;
@@ -987,6 +1132,7 @@ var maintainNexus = {
                     }
                 }
             }
+            // Plan the barricades
             else if (curRoom.memory.plan.barricades != true) {
                 // THIS MUST BE IMPROVED IN LIVE IN ORDER FOR THE RAMPART TO BE PLACED BASED ON THE CLOSEST PATH FROM THE STORAGE
                 // x = 1
@@ -1128,6 +1274,7 @@ var maintainNexus = {
                 }
                 curRoom.memory.plan.barricades = true;
             }
+            // Plan the sourceRoads
             else if (curRoom.memory.plan.sourceRoads != true) {
                 var sourceRoadQueue = [];
                 var towerTrial = _.filter(curRoom.find(FIND_STRUCTURES), (structure) => structure.structureType == STRUCTURE_TOWER);
@@ -1241,15 +1388,7 @@ var maintainNexus = {
                     curRoom.memory.plan.sourceRoads = true;
                 }
             }
-            else if (curRoom.memory.plan.planQueue.length == 0) {
-                curRoom.memory.plan = false;
-            }
         }
-        
-        //    Road: 1        | D  Rampart: 2      | D  Wall: 3         | D  Extension: 4
-        // D  Tower: 5       | D  Spawn: 6        |    Power Spawn: 7  | D  Storage: 8
-        //    Link: 9        | D  Lab: 10         | D  Terminal: 11    |    Observer: 12 
-        //    Extractor: 13  | D  Container: 14
     }
 }
 
