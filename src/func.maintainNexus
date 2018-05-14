@@ -1386,17 +1386,6 @@ var maintainNexus = {
         if (curRoom.memory.plan && curRoom.memory.plan !== false) {
             // Find extensions in planQueue
             var trial = _.filter(curRoom.memory.plan.planQueue, (schematic) => schematic.type == 4);
-            /*
-            These were established before the planQueue was made permanent
-            They have been disabled throughout the code due to possibly being reductive
-            
-            // Find extensions in buildQueue
-            var trial2 = _.filter(curRoom.memory.buildQueue, (schematic) => schematic.type == STRUCTURE_EXTENSION);
-            // Find extensions in room
-            var trial3 = _.filter(curRoom.find(FIND_STRUCTURES), (schematic) => schematic.structureType == STRUCTURE_EXTENSION);
-            // Find extension construction sites in room
-            var trial4 = _.filter(curRoom.find(FIND_CONSTRUCTION_SITES), (schematic) => schematic.structureType == STRUCTURE_EXTENSION);
-            */
             // Get the max number of extensions
             var maxExtensions = CONTROLLER_STRUCTURES[STRUCTURE_EXTENSION]["8"];
             // Make variable for extensions queued in tick
